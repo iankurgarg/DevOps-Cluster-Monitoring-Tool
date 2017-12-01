@@ -1,0 +1,27 @@
+---
+- name: Download logstash installer
+  get_url:
+    url: https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash_1.4.2-1-2c0f5a1_all.deb
+    dest: /tmp/
+
+- name: Install logstash
+  apt:
+    deb: /tmp/logstash_1.4.2-1-2c0f5a1_all.deb
+    state: present
+
+- name: Download logstasah plugins
+  get_url:
+    url: https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash-contrib_1.4.2-1-efd53ef_all.deb
+    dest: /tmp/
+
+- name: Install logstash
+  apt:
+    deb: /tmp/logstash-contrib_1.4.2-1-efd53ef_all.deb
+    state: present
+
+- name: place configuration file for logstash
+  template: 
+    src: logstash.conf.j2
+    dest: /etc/logstash.conf
+
+- name: start service

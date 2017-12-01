@@ -1,0 +1,29 @@
+---
+- name: Add apt-key
+  apt_key:
+    url: https://packages.elasticsearch.org/GPG-KEY-elasticsearch
+    state: present
+
+- name: Add repository
+  apt_repository:
+    repo: deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
+    state: present
+
+- name: Run apt-get update
+  apt:
+    update_cache: yes
+  changed_when: False
+
+- name: Install required packages
+  apt:
+    name: "{{item}}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - default-jdk
+    - elasticsearch
+
+- name: start elastic search service
+  service: 
+    name: elasticsearch
+    state: started

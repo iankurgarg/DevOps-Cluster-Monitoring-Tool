@@ -1,0 +1,16 @@
+input {
+  stdin {}
+  file {
+    type => syslog
+    path => "{{nginx_log_file_path}}"
+    start_position => beginning
+  }
+}
+
+output {
+  stdout {
+    codec => rubydebug
+  }
+  elasticsearch {
+  }
+}
