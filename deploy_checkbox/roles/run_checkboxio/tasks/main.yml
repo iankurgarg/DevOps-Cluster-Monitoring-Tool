@@ -1,0 +1,128 @@
+---
+- name: Import public key for mongodb
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: EA312927
+    state: present
+    validate_certs: no
+
+- name: Add mongodb source
+  apt_repository:
+    repo: deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse
+    state: present
+    update_cache: yes
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+    update_cache: yes
+  with_items:
+    - mongodb
+    - nginx
+    - nodejs
+    - build-essential
+    - git
+    - npm
+    - python-pip
+
+- name: install pymongo
+  pip:
+    name: pymongo
+    state: present
+
+- name: Create symbolic link node for nodejs
+  file:
+    src: /usr/bin/nodejs
+    path: /usr/bin/node
+    state: link
+
+- name: Create a mongodb service
+  copy:
+    src: mongodb.service
+    dest: /etc/systemd/system
+
+- name: Start mongodb service and make it available after bootup
+  service:
+    name: mongodb
+    state: started
+    enabled: yes
+
+- name: Add admin user to mongodb
+  mongodb_user:
+    database: admin
+    name: admin
+    password: "{{ mongodb_password }}"
+    state: present
+    roles: userAdminAnyDatabase
+
+- name: Restart mongodb service
+  service:
+    name: mongodb
+    state: restarted
+
+- name: Set mongodb environment variables
+  blockinfile:
+    path: /etc/environment
+    block: |
+      MONGO_PORT="3002"
+      MONGO_IP="127.0.0.1"
+      MONGO_USER="admin"
+      MONGO_PASSWORD="{{ mongodb_password }}"
+      MAIL_USER=""
+      MAIL_PASSWORD=""
+      MAIL_SMTP="mock"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+- name: Update the bash profile
+  shell: . /etc/environment
+
+- name: stat /etc/git where checkbox.io will be cloned
+  stat:
+    path: /etc/git/checkbox.io
+  register: gitstat
+
+- name: Create folder to clone checkbox.io repo
+  file:
+    path: /etc/git/checkbox.io
+    state: directory
+  when: gitstat.stat.exists == False
+
+- name: Checkout checbox.io get repo
+  git:
+    repo: https://github.com/AtitShetty/checkbox.io.git
+    dest: /etc/git/checkbox.io
+    version: "{{inventory_hostname}}"
+
+- name: Install npm packages for checbox.io
+  shell: npm install --prefix /etc/git/checkbox.io/server-side/site/
+
+- name: "Install forever to run checbox.io server"
+  shell: npm install -g forever
+
+- name: Overwrite nginx.conf
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx
+
+- name: Overwrite nginx default
+  copy:
+    src: default
+    dest: /etc/nginx/sites-available/
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: stop all previous version
+  shell: forever stopall
+  become: no
+
+- name: Start checbox.io server
+  shell: forever start  server.js
+  args:
+    chdir: /etc/git/checkbox.io/server-side/site/
+  become: no
+...

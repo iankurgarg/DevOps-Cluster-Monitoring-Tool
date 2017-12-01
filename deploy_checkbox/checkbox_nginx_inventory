@@ -1,0 +1,2 @@
+[node]
+production ansible_host=192.168.50.14 ansible_user=ubuntu ansible_ssh_private_key_file=private_key redis_master=192.168.50.15

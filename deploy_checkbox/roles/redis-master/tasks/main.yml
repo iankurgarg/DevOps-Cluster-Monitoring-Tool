@@ -1,0 +1,92 @@
+--- 
+- name: Install dependencies of Redis
+  apt:
+   pkg: "{{ item }}"
+   state: present
+   update_cache: yes
+  with_items:
+  - gcc
+  - make
+  - libc6-dev
+
+- name: Download Redis
+  apt_repository:
+    repo: 'ppa:chris-lea/redis-server'
+    state: present
+
+- name: apt-get update_cache
+  apt:
+    update_cache: yes
+  changed_when: False
+
+- name: Ensure Redis is present
+  apt: pkg=redis-server state=latest
+
+- name: Start Redis
+  service: name=redis state=started
+
+- name: check if ip address already present in conf file
+  command: grep "bind 127.0.0.1 {{ansible_host}}" /etc/redis/redis.conf
+  register: checkredisconf
+  ignore_errors: True
+  changed_when: False
+
+- name: add ip address in conf file
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: 'bind 127.0.0.1'
+    replace: '# bind 127.0.0.1'
+  when: checkredisconf.rc == 1
+
+- name: Restart redis service
+  shell: systemctl restart redis-server.service
+
+- name: Allow {{redis_port}} through firewall
+  shell: ufw allow {{redis_port}}
+
+- name: check if tcp keepalive already set in conf file
+  command: grep "tcp-keepalive 300" /etc/redis/redis.conf
+  register: checktcpconf
+  ignore_errors: True
+  changed_when: False
+
+- name: master task - changing tcp keepalive to 60
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: 'tcp-keepalive 300'
+    replace: 'tcp-keepalive 60'
+  when: checktcpconf.rc == 0
+
+- name: check if password for master is already set
+  command: grep "requirepass abcde" /etc/redis/redis.conf
+  register: checktcpconf
+  ignore_errors: True
+  changed_when: False
+
+- name: master task - add client password requirement
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: '# requirepass foobared'
+    replace: 'requirepass abcde'
+  when: checktcpconf.rc == 1
+
+- name: master task - updating maxmemory-policy
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: '# maxmemory-policy noeviction'
+    replace: 'maxmemory-policy noeviction'
+
+- name: master task - updating appendonly mode
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: 'appendonly no'
+    replace: 'appendonly yes'
+
+- name: master task - updating appendonly file
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: 'appendfilename "appendonly.aof"'
+    replace: 'appendfilename "redis-staging-ao.aof"'
+
+- name: Restart redis service
+  shell: systemctl restart redis-server.service

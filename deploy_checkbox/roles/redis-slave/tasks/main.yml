@@ -1,0 +1,68 @@
+---
+- name: Install dependencies of Redis
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+   - gcc
+   - make
+   - libc6-dev
+
+- name: Download Redis
+  apt_repository:
+    repo: 'ppa:chris-lea/redis-server'
+    state: present
+
+- name: apt-get update_cache
+  apt:
+    update_cache: yes
+  changed_when: False
+
+- name: Ensure Redis is present
+  apt: pkg=redis-server state=latest
+
+- name: Start Redis
+  service: name=redis state=started
+
+- name: check if ip address already present in conf file
+  command: grep "bind 127.0.0.1 {{ansible_host}}" /etc/redis/redis.conf
+  register: checkredisconf
+  ignore_errors: True
+  changed_when: False
+
+- name: add ip address in conf file
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: 'bind 127.0.0.1'
+    replace: '# bind 127.0.0.1'
+  when: checkredisconf.rc == 1
+
+- name: Restart redis service
+  shell: systemctl restart redis-server.service
+
+- name: Allow {{redis_port}} through firewall
+  shell: ufw allow {{redis_port}}
+
+- name: check if tcp keepalive already set in conf file
+  command: grep "# slaveof <masterip> <masterport>" /etc/redis/redis.conf
+  register: checkslaveconf
+  ignore_errors: True
+  changed_when: False
+
+- name: slave task - update slave of ip and port
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: '# slaveof <masterip> <masterport>'
+    replace: 'slaveof {{redis_master}} {{redis_port}}'
+  when: checkslaveconf.rc == 0
+
+- name: slave task - updating redis master password
+  replace:
+    dest: /etc/redis/redis.conf
+    regexp: '# masterauth <master-password>'
+    replace: 'masterauth abcde'
+
+
+- name: Restart redis service
+  shell: systemctl restart redis-server.service
