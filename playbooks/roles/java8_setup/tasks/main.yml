@@ -1,0 +1,38 @@
+---
+- name: Add java 8 apt repository
+  apt_repository:
+    repo: 'ppa:webupd8team/java'
+    state: present
+    update_cache: yes
+
+- name: Accept java 8 license
+  debconf:
+    name: 'oracle_java8-installer'
+    question: 'shared/accepted-oracle-license-v1-1'
+    value: 'true'
+    vtype: 'select'
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - oracle-java8-installer
+    - ca-certificates
+    - oracle-java8-set-default
+
+- name: Set JAVA_HOME and JRE_HOME environment variables
+  lineinfile:
+    path: /etc/environment
+    line: "{{ item }}"
+    state: present
+    insertafter: EOF
+  with_items:
+    - JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+    - JRE_HOME="/usr/lib/jvm/java-8-oracle/jre"
+
+- name: Update the bash profile
+  shell: . /etc/environment
+
+...

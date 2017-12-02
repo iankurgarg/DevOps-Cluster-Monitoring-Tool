@@ -1,12 +1,22 @@
 ---
+- name: Install java 8
+  include_role:
+    name: java8_setup
+
 - name: Add apt-key
   apt_key:
-    url: https://packages.elasticsearch.org/GPG-KEY-elasticsearch
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+    update_cache: yes
     state: present
 
 - name: Add repository
   apt_repository:
-    repo: deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
+    repo: deb https://artifacts.elastic.co/packages/6.x/apt stable main
     state: present
 
 - name: Run apt-get update
@@ -16,14 +26,23 @@
 
 - name: Install required packages
   apt:
-    name: "{{item}}"
+    name: elasticsearch
     state: present
     allow_unauthenticated: yes
-  with_items:
-    - default-jdk
-    - elasticsearch
 
 - name: start elastic search service
-  service: 
+  service:
     name: elasticsearch
     state: started
+    enabled: yes
+
+- name: Expose elastic search for remote access
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'network.host: 0.0.0.0'
+    state: present
+
+- name: Restart elasticsearch
+  service:
+    name: elasticsearch
+    state: restarted

@@ -20,25 +20,28 @@
     update_cache: yes
   changed_when: False
 
-- name: Install kibana
+- name: Install nginx and filebeat
   apt:
-    name: kibana
+    name: "{{ item }}"
     state: present
     allow_unauthenticated: yes
+  with_items:
+    - nginx
+    - filebeat
 
-- name: Start kibana
+- name: Place config file for filebeat
+  template:
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+    group: root
+    owner: root
+
+- name: Start nginx and filebeat
   service:
-    name: kibana
+    name: "{{ item }}"
     state: started
     enabled: yes
-
-- name: Expose kibana for remote access
-  lineinfile:
-    path: /etc/kibana/kibana.yml
-    line: 'server.host: 0.0.0.0'
-    state: present
-
-- name: Restart kibana
-  service:
-    name: kibana
-    state: restarted
+  with_items:
+    - nginx
+    - filebeat
+...
