@@ -7,9 +7,11 @@ var deasync = require('deasync');
 var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
 
-var nginx_config_changed = 0;
-var error_threshold = 0.08;
+var nginx_config_changed = 0; // flag to notify if nginx config needs t be updated
+var error_threshold = 0.08;	// max percentage of requests which can return 500
+var time_threshold = 20; // threshold request processing time in ms
 
+// Given a node id, it returns the percentage of requests which returned 500 error
 function GetErrorPercentage(ip_addr) {
 	// Call Elastic Search for getting error percentage
 	var error_conut = 0;
@@ -24,7 +26,7 @@ function GetErrorPercentage(ip_addr) {
 		if (res2 && res2.statusCode != 500) {
 			result = JSON.parse(body);
 			// get count
-			error_conut = 0;
+			error_conut = result.hits.total;
 		}
 		flag = 1;
 	});
@@ -42,8 +44,7 @@ function GetErrorPercentage(ip_addr) {
 	request(options, function(err,res2,body){
 		if (res2 && res2.statusCode != 500) {
 			result = JSON.parse(body);
-			// get count
-			total_count = 0;
+			total_count = result.hits.total;
 		}
 		flag = 1;
 	});
@@ -53,6 +54,30 @@ function GetErrorPercentage(ip_addr) {
 	}
 
 	return float(error_conut)/float(total_count);
+}
+
+// Given a node, returns the average request processing time
+function GetAverageResponseTime(node) {
+	var time = 0.0;
+	var options = {
+		uri: "elastic_search_api_call_url"
+	};
+	var flag = 0;
+
+	request(options, function(err,res2,body){
+		if (res2 && res2.statusCode != 500) {
+			result = JSON.parse(body);
+			// get count
+			time = 0.0;
+		}
+		flag = 1;
+	});
+
+	while (flag != 1) {
+		deasync.runLoopOnce();
+	}
+
+	return time;
 }
 
 // Given a node, removes it from the list of active nodes 
@@ -66,6 +91,7 @@ function MoveNodeToInActive(node) {
 }
 
 
+// When called, re-creates a nginx config file and restarts the nginx service
 function UpdateNginxConfig() {
 	// Update Nginx Config here
 	var active_nodes = [];
@@ -95,6 +121,7 @@ function UpdateNginxConfig() {
 }
 
 
+// Main function which will called after an interval which will check if active_nodes are 'healthy'
 function RunForAllIPs() {
 	var flag = 0;
 	client.lrange('active_nodes', 0, -1, function(err, nodes) {
@@ -105,6 +132,14 @@ function RunForAllIPs() {
 				MoveNodeToInActive(node);
 				nginx_config_changed = 1;
 			}
+			else {
+				var avgtime = GetAverageResponseTime(node);
+				if (avgtime >= time_threshold) {
+					MoveNodeToInActive(node);
+					nginx_config_changed = 1;
+				}
+			}
+			
 		});
 		flag = 1;
 	});
