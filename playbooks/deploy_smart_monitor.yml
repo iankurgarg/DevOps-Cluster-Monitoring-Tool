@@ -8,6 +8,7 @@
     - setup:
   become: true
   roles:
+    - role: redis-master
     - role: elastic-search
     - role: kibana
     - role: load_balancer

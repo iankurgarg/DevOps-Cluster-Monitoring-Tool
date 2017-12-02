@@ -1,7 +1,7 @@
 upstream checkbox.io{
 
-#  server 192.168.30.40;
-#  server 192.168.30.30;
+  server 192.168.50.13;
+  server 192.168.50.14;
 }
 
 server{

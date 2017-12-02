@@ -1,2 +1,6 @@
 [node]
-production ansible_host=192.168.50.14 ansible_user=ubuntu ansible_ssh_private_key_file=private_key redis_master=192.168.50.15
+node1 ansible_host=192.168.50.13 ansible_user=ubuntu ansible_ssh_private_key_file=config/keys/node1/private_key redis_master=192.168.50.15
+node2 ansible_host=192.168.50.14 ansible_user=ubuntu ansible_ssh_private_key_file=config/keys/node2/private_key redis_master=192.168.50.15
+
+[agent]
+balancer ansible_host=192.168.50.15 ansible_user=ubuntu ansible_ssh_private_key_file=config/keys/agent/private_key
