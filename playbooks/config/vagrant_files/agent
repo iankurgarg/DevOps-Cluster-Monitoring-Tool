@@ -1,0 +1,21 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure('2') do |config|
+
+  config.vm.box = 'ubuntu/xenial64'
+
+  config.vm.provider :virtualbox do |vb|
+    vb.customize [ 'modifyvm', :id, '--natdnshostresolver1', 'on' ]
+    vb.memory = "2048"
+  end
+
+  config.vm.define :agent do |machine|
+
+    machine.vm.network 'private_network', ip: '192.168.50.15'
+    machine.vm.synced_folder "/Users/iankurgarg/Code/DevOps/VMs/boxes/ansible", "/shared_mac"
+
+  end
+
+end
