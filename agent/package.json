@@ -1,0 +1,37 @@
+{
+  "name": "Analysis",
+  "version": "0.0.1",
+  "description": "Static and dynamic analysis of checkbox.io server code",
+  "main": "initial.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.ncsu.edu/akshetty/devops-milestone2.git"
+  },
+  "keywords": [
+    "static",
+    "dynamic"
+  ],
+  "dependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^3.5.0"
+  },
+  "author": "you",
+  "license": "ISC",
+  "devDependencies": {
+    "escodegen": "^1.4.1",
+    "esprima": "^1.2.2",
+    "xmlbuilder": "^9.0.4",
+    "express": "^4.12.3",
+    "http-proxy": "^1.16.2",
+    "chai": "^4.1.2",
+    "chai-http": "^2.0.1",
+    "mocha": "^3.5.0",
+    "request": "^2.54.0",
+    "random-js": "^1.0.8",
+    "redis": "^0.12.1",
+    "deasync": "^0.1.11"
+  }
+}
