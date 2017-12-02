@@ -29,6 +29,16 @@
     - logstash
     - filebeat
 
+- name: start service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - logstash
+    - filebeat
+
+
 - name: Place config file for logstash
   template:
     src: logstash.conf.j2
@@ -36,11 +46,7 @@
     owner: logstash
     group: logstash
 
-- name: start service
+- name: Restart service
   service:
-    name: "{{ item }}"
+    name: logstash
     state: restarted
-    enabled: yes
-  with_items:
-    - logstash
-    - filebeat
