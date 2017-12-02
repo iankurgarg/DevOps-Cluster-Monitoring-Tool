@@ -1,5 +1,6 @@
 var express = require('express');
 var fs      = require('fs');
+var template  = require('swig');
 var app = express();
 var httpProxy = require('http-proxy');
 var Random = require('random-js')
@@ -61,7 +62,7 @@ function GetErrorPercentage(ip_addr) {
 // Given a node, removes it from the list of active nodes 
 // and adds it to list of inactive nodes
 function MoveNodeToInActive(node) {
-	client.lrem('active_nodes', 1, node, function(err, reply) {
+	client.lrem('active_nodes', 0, node, function(err, reply) {
 		client.lpush('inactive_nodes', node, function(err2, reply2){
 			console.log("node: ", node, " moved from active to inactive nodes");
 		});
@@ -71,6 +72,28 @@ function MoveNodeToInActive(node) {
 
 function UpdateNginxConfig() {
 	// Update Nginx Config here
+	var active_nodes = [];
+	var flag = 0;
+	client.lrange('active_nodes', 0, -1, function(err, nodes) {
+		active_nodes = nodes;
+		flag = 1;
+	});
+
+	// Wait for callback to complete.
+	while (flag != 1) {
+		deasync.runLoopOnce();
+	}
+
+	// Now we have the list of active nodes. Update the configuration now.
+	var tmpl = template.compileFile(__dirname + '/nginx.conf.j2');
+	renderedTMPL = tmpl.render({
+		nodes: active_nodes
+	});
+
+	fs.writeFileSync('nginx.conf.processed', renderedTMPL);
+
+	// New configuratoin file is ready
+	// Restart nginx service to use this conf file
 
 	nginx_config_changed = 0;
 }
