@@ -26,6 +26,7 @@
     - git
     - npm
     - python-pip
+    - python3-pip
 
 - name: install pymongo
   pip:
@@ -93,7 +94,7 @@
   git:
     repo: https://github.com/AtitShetty/checkbox.io.git
     dest: /etc/git/checkbox.io
-    version: "{{inventory_hostname}}"
+    version: master
 
 - name: Install npm packages for checbox.io
   shell: npm install --prefix /etc/git/checkbox.io/server-side/site/

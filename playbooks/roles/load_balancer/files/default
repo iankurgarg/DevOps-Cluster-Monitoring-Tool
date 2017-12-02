@@ -1,0 +1,13 @@
+upstream checkbox.io{
+
+#  server 192.168.30.40;
+#  server 192.168.30.30;
+}
+
+server{
+  listen 80;
+  location / {
+    proxy_pass http://checkbox.io;
+  #  return 404;
+    }
+}

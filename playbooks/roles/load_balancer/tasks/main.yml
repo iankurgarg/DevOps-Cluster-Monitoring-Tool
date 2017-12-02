@@ -36,6 +36,13 @@
     group: root
     owner: root
 
+- name: Place config file for nginx
+  file:
+    src: default
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+
 - name: Start nginx and filebeat
   service:
     name: "{{ item }}"
@@ -44,4 +51,6 @@
   with_items:
     - nginx
     - filebeat
+
+
 ...
