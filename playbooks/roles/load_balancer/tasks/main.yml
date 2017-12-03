@@ -60,7 +60,7 @@
     - nginx
     - filebeat
 
-- name: stat directory where monitoring_agent will be cloned
+- name: stat directory where monitoring_agent will be placed
   stat:
     path: /etc/git/monitoring_agent
   register: gitstat
@@ -73,7 +73,7 @@
 
 - name: copy agent files
   copy:
-    src: files/{{item}}
+    src: files/agent/{{item}}
     dest: /etc/git/monitoring_agent/
   with_items:
     - agent.js
@@ -89,4 +89,33 @@
   become: no
   when: False
 
+
+- name: stat directory where auto-recovery agent will be placed
+  stat:
+    path: /etc/git/auto_recovery_agent
+  register: gitstat2
+
+- name: Create folder to place monitoring agent
+  file:
+    path: /etc/git/auto_recovery_agent
+    state: directory
+  when: gitstat2.stat.exists == False
+
+- name: copy agent files
+  copy:
+    src: files/auto-recovery/{{item}}
+    dest: /etc/git/auto_recovery_agent/
+  with_items:
+    - auto-recovery.js
+    - package.json
+
+- name: Install npm packages for 
+  shell: npm install --prefix /etc/git/auto_recovery_agent
+
+- name: Start agent
+  shell: forever start auto-recovery.js
+  args:
+    chdir: /etc/git/auto_recovery_agent/
+  become: no
+  when: False
 ...

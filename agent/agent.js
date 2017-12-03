@@ -10,8 +10,8 @@ var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
 
 var nginx_config_changed = 0; // flag to notify if nginx config needs t be updated
-var error_threshold = 0.08;	// max percentage of requests which can return 500
-var time_threshold = 20; // threshold request processing time in ms
+var error_threshold = 0.10;	// max percentage of requests which can return 500
+var time_threshold = 200; // threshold request processing time in ms
 
 // Given a node id, it returns the percentage of requests which returned 500 error
 // Sample cURL request
