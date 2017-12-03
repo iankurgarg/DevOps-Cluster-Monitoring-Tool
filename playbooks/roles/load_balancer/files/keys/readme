@@ -1,0 +1,5 @@
+place ssh keys for the nodes here.
+file name as follows:
+
+192.168.50.13.key
+192.168.50.14.key

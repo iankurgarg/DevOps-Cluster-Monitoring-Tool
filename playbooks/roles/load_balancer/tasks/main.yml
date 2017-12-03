@@ -89,6 +89,30 @@
   become: no
   when: False
 
+- name: Create Directory to place ssh keys for nodes
+  stat:
+    path: /etc/git/ssh_keys
+  register: stat_keys
+
+- name: Create Directory to place ssh keys for nodes
+  file:
+    path: /etc/git/ssh_keys
+    state: directory
+  when: stat_keys.stat.exists == False
+
+- name: Copy Keys for nodes to load_balancer
+  synchronize:
+    src: files/keys
+    dest: /etc/git/ssh_keys
+
+- name: Change permissions for ssh_keys
+  file:
+    path: /etc/git/ssh_keys
+    state: directory
+    mode: 0600
+    owner: ubuntu
+    group: ubuntu
+    recurse: yes
 
 - name: stat directory where auto-recovery agent will be placed
   stat:

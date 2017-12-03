@@ -50,9 +50,9 @@ function SendEmail(to_mail, sub, msg)  {
 }
 
 
-function RestartForverProcess(node, key='node0.key') {
+function RestartForverProcess(node) {
     var command = 'forever stopall';
-    var keys_path = '/Users/debosmitadas/Documents/Devops/HW1' + '/' + key
+    var keys_path = '/etc/git/ssh_keys/' + node + '.key';
 
     exec(command, {
       user: 'ubuntu',
@@ -73,9 +73,9 @@ function RestartForverProcess(node, key='node0.key') {
 }
 
 
-function RestartService(service_name, node, key){
+function RestartService(service_name, node){
     var service = 'sudo systemctl restart ' + service_name + '.service';
-    var keys_path = '/Users/debosmitadas/Documents/Devops/HW1' + '/' + key
+    var keys_path = '/etc/git/ssh_keys/' + node + '.key';
 
     exec(service, {
       user: 'ubuntu',
@@ -133,7 +133,7 @@ function UpdateNginxConfig() {
 
 
 function RecoverNode(node) {
-  RestartForverProcess(node, 'node0.key');
+  RestartForverProcess(node);
   MoveNodeToActive(node);
   SendEmail('agarg12@ncsu.edu', 'Update from Auto-Recovery Agent', 'Auto-Recovery has recovered node ' + node);
 

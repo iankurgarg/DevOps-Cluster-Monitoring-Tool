@@ -4,13 +4,14 @@ var template  = require('swig');
 var request = require("request");
 var redis = require('redis');
 var deasync = require('deasync');
+const child_process = require('child_process');
 
 var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
 
 var nginx_config_changed = 0; // flag to notify if nginx config needs t be updated
-var error_threshold = 0.08;	// max percentage of requests which can return 500
-var time_threshold = 20; // threshold request processing time in ms
+var error_threshold = 0.10;	// max percentage of requests which can return 500
+var time_threshold = 200; // threshold request processing time in ms
 
 // Given a node id, it returns the percentage of requests which returned 500 error
 // Sample cURL request
@@ -134,9 +135,43 @@ function UpdateNginxConfig() {
 	// New configuratoin file is ready
 	// Restart nginx service to use this conf file
 
-	fsextra.copySync('default', '/etc/default');
+	fsextra.copySync('default', '/etc/nginx/sites-available/default');
+
+	var result = child_process.execSync('sudo systemctl reload nginx', {
+        cwd: local
+    }).toString('utf8');
 
 	nginx_config_changed = 0;
+}
+
+// Given a message, to address, and subejct sends the email. 
+// It is used to send an update to admin about any problems in any nodes.
+function SendEmail(msg, to_mail, sub)  {
+    var transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'devops.csc.519@gmail.com',
+        pass: 'devopscsc'
+      }
+    }); 
+    
+    var mailOptions = {
+      from: 'devops.csc.519@gmail.com',
+      to: to_mail,
+      cc: to_mail,
+      bcc: to_mail,
+      bcc: to_mail,
+      subject: sub,
+      text: msg
+    }; 
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
 }
 
 
@@ -149,12 +184,16 @@ function RunForAllIPs() {
 
 			if (errorPercent >= error_threshold) {
 				MoveNodeToInActive(node);
+				SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", 
+									"agarg12@ncsu.edu", "Update from Monitoring Agent");
 				nginx_config_changed = 1;
 			}
 			else {
 				var avgtime = GetAverageResponseTime(node);
 				if (avgtime >= time_threshold) {
 					MoveNodeToInActive(node);
+					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", 
+									"agarg12@ncsu.edu", "Update from Monitoring Agent");
 					nginx_config_changed = 1;
 				}
 			}
@@ -175,3 +214,5 @@ function RunForAllIPs() {
 	}
 }
 
+
+RunForAllIPs();
