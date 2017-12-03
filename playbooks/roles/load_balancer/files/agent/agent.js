@@ -174,13 +174,36 @@ function SendEmail(msg, to_mail, sub)  {
     });
 }
 
+function RunFirstTime() {
+	client.del('active_nodes', function(err, reply){
+		console.log('previous list (if any) deleted');
+	});
+	
+	var buffer = fs.readSync('nodes.txt');
+	var flag = 0;
+	nodes = buffer.split('\n');
+	nodes.forEach(function(node){
+		flag = 0;
+		client.lpush('active_nodes', node, function(err, reply) {
+			flag = 1;
+		});
+		while (flag != 1) {
+			deasync.runLoopOnce();
+		}
+	});
+	console.log('added nodes in redis for the first time');
+}
+
 
 // Main function which will called after an interval which will check if active_nodes are 'healthy'
 function RunForAllIPs() {
 	var flag = 0;
 	client.lrange('active_nodes', 0, -1, function(err, nodes) {
+		console.log('active-nodes = ', nodes);
 		nodes.forEach(function(node) {
+			console.log('node = ', node);
 			var errorPercent = GetErrorPercentage(node);
+			console.log('errorPercent = ', errorPercent);
 
 			if (errorPercent >= error_threshold) {
 				MoveNodeToInActive(node);
@@ -206,13 +229,18 @@ function RunForAllIPs() {
 	while (flag != 1) {
 		deasync.runLoopOnce();
 	}
+	console.log('completed callback');
 
 	flag = 0;
 
 	if (nginx_config_changed == 1) {
+		console.log('updating nginx conf');
 		UpdateNginxConfig();
 	}
+	console.log('done');
 }
 
+RunFirstTime();
+UpdateNginxConfig();
 
 RunForAllIPs();

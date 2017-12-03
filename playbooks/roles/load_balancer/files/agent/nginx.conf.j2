@@ -1,0 +1,16 @@
+upstream checkbox.io{
+{% for node in nodes %}
+    server {{ node }}
+{% else %}
+{% endfor %}
+}
+
+server{
+  listen 80;
+  location / {
+    proxy_pass http://checkbox.io;
+    {% if nodes|length == 0 %}
+        return 404;
+    {% endif %}
+    }
+}
