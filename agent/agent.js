@@ -12,21 +12,29 @@ var error_threshold = 0.08;	// max percentage of requests which can return 500
 var time_threshold = 20; // threshold request processing time in ms
 
 // Given a node id, it returns the percentage of requests which returned 500 error
+// Sample cURL request
+// curl -XGET "http://192.168.50.15:9200/nginx-2017.12.03/_search" -H 'Content-Type: application/json' -d' { "query": { "bool": { "must": [ { "match": { "upstream_addr": "192.168.50.13" } }, { "match": { "response": 200 } } ] }}}'
 function GetErrorPercentage(ip_addr) {
 	// Call Elastic Search for getting error percentage
 	var error_conut = 0;
 	var total_count = 0;
 
 	var options = {
-		uri: "elastic_search_api_call_url"
+		uri: "http://192.168.50.15:9200/nginx-2017.12.03/_search",
+		method: "GET",
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "match": { "response": 500 } } ] }}}
 	};
+
 	var flag = 0;
 
 	request(options, function(err,res2,body){
 		if (res2 && res2.statusCode != 500) {
-			result = JSON.parse(body);
+			// result = JSON.parse(body);
 			// get count
-			error_conut = result.hits.total;
+			error_conut = res2.body.hits.total;
 		}
 		flag = 1;
 	});
@@ -37,14 +45,19 @@ function GetErrorPercentage(ip_addr) {
 
 
 	var options = {
-		uri: "elastic_search_api_call_url"
+		uri: "http://192.168.50.15:9200/nginx-2017.12.03/_search",
+		method: "GET",
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } } ] }}}
 	};
 	flag = 0;
 
 	request(options, function(err,res2,body){
 		if (res2 && res2.statusCode != 500) {
-			result = JSON.parse(body);
-			total_count = result.hits.total;
+			// result = JSON.parse(body);
+			total_count = res2.body.hits.total;
 		}
 		flag = 1;
 	});
@@ -53,22 +66,25 @@ function GetErrorPercentage(ip_addr) {
 		deasync.runLoopOnce();
 	}
 
-	return float(error_conut)/float(total_count);
+	return (error_conut)/(total_count);
 }
 
 // Given a node, returns the average request processing time
 function GetAverageResponseTime(node) {
 	var time = 0.0;
 	var options = {
-		uri: "elastic_search_api_call_url"
+		uri: "http://192.168.50.15:9200/nginx-2017.12.03/_search",
+		method: "GET",
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": node } } ] }}, "aggs" : { "avg_rt" : { "avg" : { "field" : "rt" } } } }
 	};
 	var flag = 0;
 
 	request(options, function(err,res2,body){
 		if (res2 && res2.statusCode != 500) {
-			result = JSON.parse(body);
-			// get count
-			time = 0.0;
+			time = res2.body.aggregations.avg_rt.value;
 		}
 		flag = 1;
 	});
