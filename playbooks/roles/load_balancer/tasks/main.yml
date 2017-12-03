@@ -108,7 +108,6 @@
   shell: forever start agent.js
   args:
     chdir: /etc/git/monitoring_agent/
-  when: False
 
 - name: Create Directory to place ssh keys for nodes
   stat:
@@ -162,5 +161,4 @@
   shell: forever start auto-recovery.js
   args:
     chdir: /etc/git/auto_recovery_agent/
-  when: False
 ...
