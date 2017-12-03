@@ -139,6 +139,8 @@ function UpdateNginxConfig() {
 	nginx_config_changed = 0;
 }
 
+// Given a message, to address, and subejct sends the email. 
+// It is used to send an update to admin about any problems in any nodes.
 function SendEmail(msg, to_mail, sub)  {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -158,20 +160,6 @@ function SendEmail(msg, to_mail, sub)  {
       text: msg
     }; 
 
-    // var mailOptions = {
-    //   from: 'devops.csc.519@gmail.com',
-    //   to: 'akshetty@ncsu.edu',
-    //   subject: 'Attention - Server Down!!',
-    //   text: 'Server down!'
-    // };
-
-    // var mailOptions = {
-    //   from: 'devops.csc.519@gmail.com',
-    //   to: 'agarg12@ncsu.edu',
-    //   subject: 'Attention - Server Down!!',
-    //   text: 'Server down!'
-    // };
-
     transporter.sendMail(mailOptions, function(error, info){
       if (error) {
         console.log(error);
@@ -179,10 +167,6 @@ function SendEmail(msg, to_mail, sub)  {
         console.log('Email sent: ' + info.response);
       }
     });
-}
-
-function SendEmail(message, admin_email) {
-
 }
 
 
@@ -195,13 +179,16 @@ function RunForAllIPs() {
 
 			if (errorPercent >= error_threshold) {
 				MoveNodeToInActive(node);
+				SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", 
+									"agarg12@ncsu.edu", "Update from Monitoring Agent");
 				nginx_config_changed = 1;
 			}
 			else {
 				var avgtime = GetAverageResponseTime(node);
 				if (avgtime >= time_threshold) {
 					MoveNodeToInActive(node);
-					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", "agarg12@ncsu.edu", "Update from Monitoring Agent");
+					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", 
+									"agarg12@ncsu.edu", "Update from Monitoring Agent");
 					nginx_config_changed = 1;
 				}
 			}
