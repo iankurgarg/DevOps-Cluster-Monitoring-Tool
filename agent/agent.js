@@ -4,6 +4,7 @@ var template  = require('swig');
 var request = require("request");
 var redis = require('redis');
 var deasync = require('deasync');
+const child_process = require('child_process');
 
 var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
@@ -134,7 +135,11 @@ function UpdateNginxConfig() {
 	// New configuratoin file is ready
 	// Restart nginx service to use this conf file
 
-	fsextra.copySync('default', '/etc/default');
+	fsextra.copySync('default', '/etc/nginx/sites-available/default');
+
+	var result = child_process.execSync('sudo systemctl reload nginx', {
+        cwd: local
+    }).toString('utf8');
 
 	nginx_config_changed = 0;
 }
