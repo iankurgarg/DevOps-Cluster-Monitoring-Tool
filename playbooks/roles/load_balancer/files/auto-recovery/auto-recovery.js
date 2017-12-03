@@ -1,8 +1,12 @@
+var fs      = require('fs');
+var fsextra      = require('fs-extra');
 var exec = require('ssh-exec');
 var nodemailer = require('nodemailer');
 var sleep = require('system-sleep');
 var redis = require('redis');
 var deasync = require('deasync');
+const child_process = require('child_process');
+var template  = require('swig');
 
 var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
@@ -124,18 +128,20 @@ function UpdateNginxConfig() {
 
   fsextra.copySync('default', '/etc/nginx/sites-available/default');
 
-  var result = child_process.execSync('sudo systemctl reload nginx', {
-        cwd: local
-    }).toString('utf8');
+  var result = child_process.execSync('sudo systemctl reload nginx').toString('utf8');
 
   nginx_config_changed = 0;
 }
 
 
 function RecoverNode(node) {
+  console.log('running for ndoe = ', node);
   RestartForverProcess(node);
+  console.log('service restarted');
   MoveNodeToActive(node);
+  UpdateNginxConfig();
   SendEmail('agarg12@ncsu.edu', 'Update from Auto-Recovery Agent', 'Auto-Recovery has recovered node ' + node);
+  console.log('done');
 
 }
 
@@ -143,8 +149,9 @@ function RecoverNode(node) {
 function RunForAllIPs() {
   var flag = 0;
   client.lrange('inactive_nodes', 0, -1, function(err, nodes) {
+    console.log('inactive nodes = ', nodes)
     if (nodes != null && nodes.length > 0) {
-      nodes.forEach(RecoverNode(node));  
+      nodes.forEach(RecoverNode);  
       nginx_config_changed = 1;
     }
     else {
@@ -164,6 +171,11 @@ function RunForAllIPs() {
 }
 
 
-RunForAllIPs();
+setInterval(RunForAllIPs, 5*60*1000);
+
+
+client.end();
+
+
 
 

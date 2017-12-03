@@ -5,6 +5,7 @@ var request = require("request");
 var redis = require('redis');
 var deasync = require('deasync');
 const child_process = require('child_process');
+var nodemailer = require('nodemailer');
 
 var client = redis.createClient(6379, '127.0.0.1', {});
 client.auth('abcde');
@@ -27,7 +28,7 @@ function GetErrorPercentage(ip_addr) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "match": { "response": 500 } },{ "range": { "@timestamp": { "gt": "now-60m" }}} ] } }}
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "match": { "response": 500 } },{ "range": { "@timestamp": { "gt": "now-30m" }}} ] } }}
 	};
 
 	var flag = 0;
@@ -52,7 +53,7 @@ function GetErrorPercentage(ip_addr) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "range": { "@timestamp": { "gt": "now-60m" }}} ] } }}
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "range": { "@timestamp": { "gt": "now-30m" }}} ] } }}
 	};
 	flag = 0;
 
@@ -80,7 +81,7 @@ function GetAverageResponseTime(node) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": node } }, { "range": { "@timestamp": { "gt": "now-60m" }}} ] }}, "aggs" : { "avg_rt" : { "avg" : { "field" : "rt" } } } }
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": node } }, { "range": { "@timestamp": { "gt": "now-30m" }}} ] }}, "aggs" : { "avg_rt" : { "avg" : { "field" : "rt" } } } }
 	};
 	var flag = 0;
 
@@ -137,9 +138,7 @@ function UpdateNginxConfig() {
 
 	fsextra.copySync('default', '/etc/nginx/sites-available/default');
 
-	var result = child_process.execSync('sudo systemctl reload nginx', {
-        cwd: local
-    }).toString('utf8');
+	var result = child_process.execSync('sudo systemctl reload nginx').toString('utf8');
 
 	nginx_config_changed = 0;
 }
@@ -178,8 +177,8 @@ function RunFirstTime() {
 	client.del('active_nodes', function(err, reply){
 		console.log('previous list (if any) deleted');
 	});
-	
-	var buffer = fs.readSync('nodes.txt');
+
+	var buffer = fs.readFileSync('nodes.txt', "utf8");
 	var flag = 0;
 	nodes = buffer.split('\n');
 	nodes.forEach(function(node){
@@ -242,5 +241,9 @@ function RunForAllIPs() {
 
 RunFirstTime();
 UpdateNginxConfig();
-
 RunForAllIPs();
+setInterval(RunForAllIPs, 30*60*1000);
+
+
+client.end();
+

@@ -31,6 +31,18 @@
     - nodejs
     - npm
 
+- name: upgrade node version
+  command: npm cache clean -f
+
+- name: upgrade node version
+  command: npm install -g n
+
+- name: upgrade node version
+  command: n stable
+
+- name: upgrade node version
+  command: ln -sf /usr/local/n/versions/node/9.2.0/bin/node /usr/bin/node
+
 - name: Create symbolic link node for nodejs
   file:
     src: /usr/bin/nodejs
@@ -96,7 +108,6 @@
   shell: forever start agent.js
   args:
     chdir: /etc/git/monitoring_agent/
-  become: no
   when: False
 
 - name: Create Directory to place ssh keys for nodes
@@ -142,6 +153,7 @@
   with_items:
     - auto-recovery.js
     - package.json
+    - nginx.conf.j2
 
 - name: Install npm packages for auto_recovery_agent
   shell: npm install --prefix /etc/git/auto_recovery_agent
@@ -150,6 +162,5 @@
   shell: forever start auto-recovery.js
   args:
     chdir: /etc/git/auto_recovery_agent/
-  become: no
   when: False
 ...
