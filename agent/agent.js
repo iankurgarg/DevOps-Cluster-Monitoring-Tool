@@ -214,3 +214,5 @@ function RunForAllIPs() {
 	}
 }
 
+
+RunForAllIPs();
