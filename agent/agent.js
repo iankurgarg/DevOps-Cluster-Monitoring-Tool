@@ -139,6 +139,10 @@ function UpdateNginxConfig() {
 	nginx_config_changed = 0;
 }
 
+function SendEmail(message, admin_email) {
+
+}
+
 
 // Main function which will called after an interval which will check if active_nodes are 'healthy'
 function RunForAllIPs() {
@@ -155,6 +159,7 @@ function RunForAllIPs() {
 				var avgtime = GetAverageResponseTime(node);
 				if (avgtime >= time_threshold) {
 					MoveNodeToInActive(node);
+					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", "someone@example.com");
 					nginx_config_changed = 1;
 				}
 			}
