@@ -60,5 +60,33 @@
     - nginx
     - filebeat
 
+- name: stat directory where monitoring_agent will be cloned
+  stat:
+    path: /etc/git/monitoring_agent
+  register: gitstat
+
+- name: Create folder to place monitoring agent
+  file:
+    path: /etc/git/monitoring_agent
+    state: directory
+  when: gitstat.stat.exists == False
+
+- name: copy agent files
+  copy:
+    src: files/{{item}}
+    dest: /etc/git/monitoring_agent/
+  with_items:
+    - agent.js
+    - package.json
+
+- name: Install npm packages for 
+  shell: npm install --prefix /etc/git/monitoring_agent
+
+- name: Start agent
+  shell: forever start agent.js
+  args:
+    chdir: /etc/git/monitoring_agent/
+  become: no
+  when: False
 
 ...
