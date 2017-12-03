@@ -7,13 +7,15 @@ beats {
 
 filter {
  grok {
-   match => [ "message" , "%{COMBINEDAPACHELOG}+%{GREEDYDATA:extra_fields}"]
+   match => [ "message" , "(%{IP:remote_addr}) (%{NUMBER:response}) (%{NUMBER:bytes}) (%{NUMBER:rt}) (%{NUMBER:urt}) (%{IPORHOST:upstream_addr})"]
    overwrite => [ "message" ]
  }
  mutate {
    convert => ["response", "integer"]
    convert => ["bytes", "integer"]
    convert => ["responsetime", "float"]
+   convert => ["rt", "float"]
+   convert => ["urt", "float"]
  }
  geoip {
    source => "clientip"

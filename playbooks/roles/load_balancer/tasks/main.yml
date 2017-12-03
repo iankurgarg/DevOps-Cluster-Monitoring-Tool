@@ -36,9 +36,17 @@
     group: root
     owner: root
 
-- name: Place config file for nginx
-  file:
-    src: default
+- name: Place nginx.conf file for nginx
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+
+
+- name: Place default config file for nginx
+  copy:
+    src: files/default
     dest: /etc/nginx/sites-available/default
     owner: root
     group: root
