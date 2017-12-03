@@ -27,7 +27,7 @@ function GetErrorPercentage(ip_addr) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "match": { "response": 200 } } ] }}}
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": ip_addr } }, { "match": { "response": 200 } },{ "range": { "@timestamp": { "gt": "now-60m" }}} ] } }}
 	};
 
 	var flag = 0;
@@ -79,7 +79,7 @@ function GetAverageResponseTime(node) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": node } } ] }}, "aggs" : { "avg_rt" : { "avg" : { "field" : "rt" } } } }
+		json: { "query": { "bool": { "must": [ { "match": { "upstream_addr": node } }, { "range": { "@timestamp": { "gt": "now-60m" }}} ] }}, "aggs" : { "avg_rt" : { "avg" : { "field" : "rt" } } } }
 	};
 	var flag = 0;
 
