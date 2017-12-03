@@ -1,0 +1,9 @@
+Being Block
+
+    server 192.168.0.1
+
+    server 192.168.0.2
+
+    server 192.168.0.3
+
+End Block

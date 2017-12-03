@@ -139,6 +139,48 @@ function UpdateNginxConfig() {
 	nginx_config_changed = 0;
 }
 
+function SendEmail(msg, to_mail, sub)  {
+    var transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'devops.csc.519@gmail.com',
+        pass: 'devopscsc'
+      }
+    }); 
+    
+    var mailOptions = {
+      from: 'devops.csc.519@gmail.com',
+      to: to_mail,
+      cc: to_mail,
+      bcc: to_mail,
+      bcc: to_mail,
+      subject: sub,
+      text: msg
+    }; 
+
+    // var mailOptions = {
+    //   from: 'devops.csc.519@gmail.com',
+    //   to: 'akshetty@ncsu.edu',
+    //   subject: 'Attention - Server Down!!',
+    //   text: 'Server down!'
+    // };
+
+    // var mailOptions = {
+    //   from: 'devops.csc.519@gmail.com',
+    //   to: 'agarg12@ncsu.edu',
+    //   subject: 'Attention - Server Down!!',
+    //   text: 'Server down!'
+    // };
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
+}
+
 function SendEmail(message, admin_email) {
 
 }
@@ -159,7 +201,7 @@ function RunForAllIPs() {
 				var avgtime = GetAverageResponseTime(node);
 				if (avgtime >= time_threshold) {
 					MoveNodeToInActive(node);
-					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", "someone@example.com");
+					SendEmail("Node: " + node + " is under performing and hence is being removed from load balancer for now.", "agarg12@ncsu.edu", "Update from Monitoring Agent");
 					nginx_config_changed = 1;
 				}
 			}
