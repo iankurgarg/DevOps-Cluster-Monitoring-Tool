@@ -149,13 +149,13 @@ function SendEmail(msg, to_mail, sub)  {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'devops.csc.519@gmail.com',
-        pass: 'devopscsc'
+        user: 'from_email',
+        pass: 'from_pass'
       }
     }); 
     
     var mailOptions = {
-      from: 'devops.csc.519@gmail.com',
+      from: 'from_email',
       to: to_mail,
       cc: to_mail,
       bcc: to_mail,
@@ -241,7 +241,6 @@ function RunForAllIPs() {
 
 RunFirstTime();
 UpdateNginxConfig();
-RunForAllIPs();
 setInterval(RunForAllIPs, 30*60*1000);
 
 

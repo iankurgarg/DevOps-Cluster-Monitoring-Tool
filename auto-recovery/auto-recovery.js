@@ -15,13 +15,13 @@ function SendEmail(to_mail, sub, msg)  {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'devops.csc.519@gmail.com',
-        pass: 'devopscsc'
+        user: 'from_email',
+        pass: 'from_password'
       }
     }); 
     
     var mailOptions = {
-      from: 'devops.csc.519@gmail.com',
+      from: 'from_email',
       to: to_mail,
       cc: to_mail,
       bcc: to_mail,
