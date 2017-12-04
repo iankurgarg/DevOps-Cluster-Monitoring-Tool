@@ -1,5 +1,9 @@
 # DevOps Milestone 4: Cluster Monitoring Agent
-We have implemented a Cluster Monitoring Agent (based on circuit breaker pattern) and an Auto-Recovery Agent
+We have implemented a Cluster Monitoring Agent (based on circuit breaker pattern) and an Auto-Recovery Agent <br />
+<br />
+This is part of a 4-part project. The other three milestones are [here](https://github.com/iankurgarg/DevOps/tree/master/Project) <br />
+
+
 
 ## Overall Project Video Presentation
 [![Project Overview](https://img.youtube.com/vi/bfyCV9SgoC8/0.jpg)](https://www.youtube.com/watch?v=bfyCV9SgoC8)
